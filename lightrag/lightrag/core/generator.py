@@ -162,6 +162,29 @@ class Generator(Component):
         s = f"model_kwargs={self.model_kwargs}, model_type={self.model_type}"
         return s
 
+    async def _apost_call(self, completion: Any) -> GeneratorOutputType:
+        r"""Get string completion and process it with the output_processors."""
+        try:
+            response = await self.model_client.aparse_chat_completion(completion)
+        except Exception as e:
+            log.error(f"Error parsing the completion {completion}: {e}")
+            return GeneratorOutput(raw_response=str(completion), error=str(e))
+
+        # the output processors operate on the str, the raw_response field.
+        output: GeneratorOutputType = GeneratorOutput(raw_response=response)
+
+        if self.output_processors:
+            try:
+                response = self.output_processors(response)
+                output.data = response
+            except Exception as e:
+                log.error(f"Error processing the output processors: {e}")
+                output.error = str(e)
+        else:  # default to string output
+            output.data = response
+
+        return output
+
     def _post_call(self, completion: Any) -> GeneratorOutputType:
         r"""Get string completion and process it with the output_processors."""
         try:
@@ -251,7 +274,7 @@ class Generator(Component):
         self,
         prompt_kwargs: Optional[Dict] = {},
         model_kwargs: Optional[Dict] = {},
-    ) -> GeneratorOutputType:
+    ) -> GeneratorOutputType:        
         r"""Async call the model with the input and model_kwargs.
 
         :warning::
@@ -263,8 +286,8 @@ class Generator(Component):
         api_kwargs = self._pre_call(prompt_kwargs, model_kwargs)
         completion = await self.model_client.acall(
             api_kwargs=api_kwargs, model_type=self.model_type
-        )
-        output = self._post_call(completion)
+        )        
+        output = await self._apost_call(completion)
         log.info(f"output: {output}")
         return output
 
