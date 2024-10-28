@@ -1,3 +1,10 @@
+<<<<<<< HEAD
+## [0.2.4] - 2024-09-23
+
+### Improved
+- Better diagnose report for `Trainer.diagnose`.
+- Multi-hop RAG with handling of Cycle.
+=======
 ## [0.2.4] - 2024-10-27
 
 ### Added
@@ -8,6 +15,7 @@
 - Wrong score in the diagnose file as `prepare_eval` is not passing classification label 0 to the `eval_input`.
 
 
+>>>>>>> main
 ## [0.2.3] - 2024-09-20
 
 ### Rename
